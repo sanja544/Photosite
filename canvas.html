@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Фото на полотні</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="canvas-container">
+    <h1>Фото на полотні</h1>
+
+    <div class="card">
+      <h2>Оберіть розмір</h2>
+
+      <div class="form-group">
+        <label for="canvas-size">Розмір полотна</label>
+        <select id="canvas-size">
+          <option value="30×30" data-price="191">30×30 — 191 грн</option>
+          <option value="30×40" data-price="270">30×40 — 270 грн</option>
+          <option value="30×50" data-price="300">30×50 — 300 грн</option>
+
+          <option value="40×40" data-price="299">40×40 — 299 грн</option>
+          <option value="40×50" data-price="356">40×50 — 356 грн</option>
+          <option value="40×60" data-price="340">40×60 — 340 грн</option>
+
+          <option value="50×50" data-price="365" selected>50×50 — 365 грн</option>
+          <option value="50×70" data-price="395">50×70 — 395 грн</option>
+
+          <option value="60×60" data-price="465">60×60 — 465 грн</option>
+          <option value="60×80" data-price="542">60×80 — 542 грн</option>
+
+          <option value="70×70" data-price="538">70×70 — 538 грн</option>
+
+          <option value="50×90" data-price="540">50×90 — 540 грн</option>
+          <option value="70×90" data-price="616">70×90 — 616 грн</option>
+          <option value="80×80" data-price="619">80×80 — 619 грн</option>
+          <option value="90×90" data-price="752">90×90 — 752 грн</option>
+
+          <option value="60×100" data-price="548">60×100 — 548 грн</option>
+          <option value="70×110" data-price="750">70×110 — 750 грн</option>
+          <option value="80×100" data-price="756">80×100 — 756 грн</option>
+          <option value="90×110" data-price="856">90×110 — 856 грн</option>
+          <option value="90×130" data-price="975">90×130 — 975 грн</option>
+
+          <option value="100×100" data-price="867">100×100 — 867 грн</option>
+          <option value="110×110" data-price="954">110×110 — 954 грн</option>
+        </select>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h2>Додатково</h2>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px; text-align:left;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="min-width:18px; margin-top:2px;">✅</div>
+            <div>
+              <div><strong>Захисне картонне пакування</strong> +40 грн</div>
+              <div class="small-note" style="margin:0;">включено у вартість. При самовивозі −40 грн (віднімемо при оформленні)</div>
+            </div>
+          </div>
+
+          <label style="display:flex; gap:10px; align-items:flex-start; color:#e0e0e0; font-weight:400; margin:0;">
+            <input type="checkbox" id="opt-bg" />
+            <div>
+              <div><strong>Заміна фону</strong></div>
+              <div class="small-note" style="margin:0;">від 100 грн (точну вартість уточнимо після фото)</div>
+            </div>
+          </label>
+
+          <label style="display:flex; gap:10px; align-items:flex-start; color:#e0e0e0; font-weight:400; margin:0;">
+            <input type="checkbox" id="opt-sharp" />
+            <div>
+              <div><strong>Покращення чіткості</strong> +40 грн</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="price-summary" style="margin-top:12px;">
+        <div>Полотно: <strong><span id="base-price">365</span> грн</strong></div>
+        <div style="margin-top:6px;">Пакування (включено): <strong>+40 грн</strong></div>
+        <div style="margin-top:6px;">Додатково (без фону): <strong><span id="extras-price">0</span> грн</strong></div>
+        <div style="margin-top:6px; font-size:1.05rem;">Разом (без фону): <strong><span id="total-price">405</span> грн</strong></div>
+        <div class="small-note" style="margin-top:8px;">
+          Якщо обрана “заміна фону” — фінальна ціна уточнюється (від 100 грн).
+        </div>
+      </div>
+
+      <div class="small-note">
+        Telegram відкриє чат з текстом. Для Viber — текст автоматично копіюється, потім вставте його у Viber і прикріпіть фото.
+      </div>
+
+      <div class="social-buttons" style="padding-left:0; padding-right:0;">
+        <button type="button" id="btn-telegram" class="main-button">Замовити в Telegram</button>
+        <button type="button" id="btn-viber" class="main-button">Замовити в Viber</button>
+      </div>
+
+      <div class="form-group" style="margin-top:10px;">
+        <label for="order-preview">Текст замовлення (можна скопіювати вручну)</label>
+        <textarea id="order-preview" readonly></textarea>
+      </div>
+
+      <a href="index.html" class="back-button">Повернутися</a>
+    </div>
+  </div>
+
+  <script>
+    const TELEGRAM_URL = "https://t.me/withlove_oleksandr";
+    const VIBER_URL = "https://connect.viber.com/business/63097086-bc9e-11ef-acb5-d256a1b504ef?utm_source=manage&utm_medium=copy_link";
+
+    const PACKAGING_FEE = 40; // завжди включено
+
+    const sizeSelect = document.getElementById('canvas-size');
+    const optBg = document.getElementById('opt-bg');
+    const optSharp = document.getElementById('opt-sharp');
+
+    const basePriceEl = document.getElementById('base-price');
+    const extrasPriceEl = document.getElementById('extras-price');
+    const totalPriceEl = document.getElementById('total-price');
+    const preview = document.getElementById('order-preview');
+
+    function getSelected() {
+      const opt = sizeSelect.options[sizeSelect.selectedIndex];
+      return {
+        size: opt.value,
+        basePrice: parseInt(opt.dataset.price, 10) || 0
+      };
+    }
+
+    function calcExtrasWithoutBg() {
+      // “заміна фону” не додаємо (бо від 100 і не точна)
+      let sum = 0;
+      if (optSharp.checked) sum += 40;
+      return sum;
+    }
+
+    function buildOrderText() {
+      const { size, basePrice } = getSelected();
+
+      const extras = [];
+      extras.push("захисне картонне пакування (+40 грн, включено; при самовивозі −40 грн)");
+      if (optBg.checked) extras.push("заміна фону (від 100 грн)");
+      if (optSharp.checked) extras.push("покращення чіткості (+40 грн)");
+
+      const extrasLine = `Додатково: ${extras.join(", ")}`;
+
+      const totalNoBg = basePrice + PACKAGING_FEE + calcExtrasWithoutBg();
+
+      return `🖼️ Фото на полотні
+Розмір: ${size}
+Полотно: ${basePrice} грн
+Пакування: +40 грн (включено; самовивіз −40 грн)
+${optSharp.checked ? "Покращення чіткості: +40 грн" : ""}
+${optBg.checked ? "Заміна фону: від 100 грн" : ""}
+Разом (без фону): ${totalNoBg} грн
+Фото скидаю нижче ⬇️`;
+    }
+
+    function refresh() {
+      const { basePrice } = getSelected();
+      const extrasNoBg = calcExtrasWithoutBg();
+      const totalNoBg = basePrice + PACKAGING_FEE + extrasNoBg;
+
+      basePriceEl.textContent = basePrice;
+      extrasPriceEl.textContent = extrasNoBg;
+      totalPriceEl.textContent = totalNoBg;
+
+      // прибираємо порожні рядки в тексті
+      preview.value = buildOrderText()
+        .split("\n")
+        .filter(line => line.trim().length > 0)
+        .join("\n");
+    }
+
+    function openTelegram() {
+      const text = preview.value || buildOrderText();
+      const url = `${TELEGRAM_URL}?text=${encodeURIComponent(text)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function openViber() {
+      const text = preview.value || buildOrderText();
+
+      const afterCopy = () => {
+        alert("Текст замовлення скопійовано. Зараз відкрию Viber — вставте текст і прикріпіть фото. Або напишіть своє звернення.");
+        window.open(VIBER_URL, "_blank", "noopener,noreferrer");
+      };
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(afterCopy, () => {
+          alert("Не вдалося скопіювати автоматично. Скопіюйте текст вручну з поля. Або напишіть своє звернення.");
+          window.open(VIBER_URL, "_blank", "noopener,noreferrer");
+        });
+      } else {
+        alert("Скопіюйте текст вручну з поля. Або напишіть своє звернення.");
+        window.open(VIBER_URL, "_blank", "noopener,noreferrer");
+      }
+    }
+
+    sizeSelect.addEventListener('change', refresh);
+    optBg.addEventListener('change', refresh);
+    optSharp.addEventListener('change', refresh);
+
+    document.getElementById('btn-telegram').addEventListener('click', openTelegram);
+    document.getElementById('btn-viber').addEventListener('click', openViber);
+
+    refresh();
+  </script>
+</body>
+</html>

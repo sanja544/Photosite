@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Замовлення друку фото</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="form-container">
+    <h1>Замовлення друку фото</h1>
+
+    <form id="order-form">
+      <div class="form-group">
+        <label for="photos">Фото для друку (мінімум 20) <span class="required">*</span></label>
+        <input type="file" id="photos" accept="image/*" multiple required>
+        <div id="file-info" class="small-note" style="text-align:left;">Файлів не вибрано</div>
+        <div id="file-error" class="error-message"></div>
+
+        <div id="price-summary" class="price-summary" style="display:none;">
+          Вартість замовлення: <span id="total-price">0</span> грн
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="surname">Прізвище <span class="required">*</span></label>
+        <input type="text" id="surname" placeholder="Наприклад: Іванов" required>
+      </div>
+      <div class="form-group">
+        <label for="name">Ім'я <span class="required">*</span></label>
+        <input type="text" id="name" placeholder="Наприклад: Іван" required>
+      </div>
+      <div class="form-group">
+        <label for="patronymic">По-батькові <span class="required">*</span></label>
+        <input type="text" id="patronymic" placeholder="Наприклад: Іванович" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Телефон <span class="required">*</span></label>
+        <input type="text" id="phone" placeholder="+380 XX XXX XX XX" required>
+      </div>
+
+      <div class="form-group">
+        <label>Спосіб доставки <span class="required">*</span></label>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+          <label style="margin:0; color:#e0e0e0; font-weight:400;">
+            <input type="radio" name="delivery" value="ukrposhta" required> Укрпошта
+          </label>
+          <label style="margin:0; color:#e0e0e0; font-weight:400;">
+            <input type="radio" name="delivery" value="novaposhta"> Нова Пошта
+          </label>
+        </div>
+
+        <div id="ukrposhta-fields" class="delivery-fields">
+          <div class="form-group">
+            <label for="postal-index">Поштовий індекс <span class="required">*</span></label>
+            <input type="text" id="postal-index" placeholder="Наприклад: 61000">
+          </div>
+          <div class="form-group">
+            <label for="ukrposhta-address">Адреса</label>
+            <input type="text" id="ukrposhta-address" placeholder="Наприклад: вул. Центральна, 10, кв. 5">
+          </div>
+        </div>
+
+        <div id="novaposhta-fields" class="delivery-fields">
+          <div class="form-group">
+            <label for="region">Область <span class="required">*</span></label>
+            <input type="text" id="region" placeholder="Наприклад: Харківська">
+          </div>
+          <div class="form-group">
+            <label for="city">Населений пункт <span class="required">*</span></label>
+            <input type="text" id="city" placeholder="Наприклад: Київ">
+          </div>
+          <div class="form-group">
+            <label for="branch">Номер відділення/поштомату <span class="required">*</span></label>
+            <input type="text" id="branch" placeholder="Наприклад: №1">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Додаткові побажання</label>
+        <input type="text" id="notes" placeholder="Кількість копій, рамки тощо">
+      </div>
+
+      <div class="card">
+        <h2>Швидке замовлення</h2>
+        <div style="margin-top:8px;">
+          1) Натисніть Telegram або Viber<br>
+          2) Відправте текст замовлення<br>
+          3) Прикріпіть фото в чаті
+        </div>
+        <div class="small-note" style="margin-top:10px;">
+          Telegram: @withlove_oleksandr · Телефон: +38 (098) 116-46-88
+        </div>
+      </div>
+
+      <div class="social-buttons" style="padding-left:0; padding-right:0;">
+        <button type="button" id="send-telegram" class="main-button">Telegram</button>
+        <button type="button" id="send-viber" class="main-button">Viber</button>
+        <button type="button" id="copy-text" class="main-button">Копіювати текст</button>
+      </div>
+
+      <div class="form-group">
+        <label for="order-preview">Текст замовлення</label>
+        <textarea id="order-preview" readonly placeholder="Заповніть форму — тут зʼявиться текст замовлення"></textarea>
+      </div>
+
+      <a href="index.html" class="back-button">Повернутися</a>
+    </form>
+  </div>
+
+  <script src="order-share.js"></script>
+  <script>
+    const PRICES = { '20-50': 5, '51-99': 4.8, '100': 399, '101-150': 4.5, '151-199': 4.3, '200+': 4 };
+    const MIN_QTY = 20;
+
+    const photos = document.getElementById('photos');
+    const fileInfo = document.getElementById('file-info');
+    const fileError = document.getElementById('file-error');
+    const priceSummary = document.getElementById('price-summary');
+    const totalPriceEl = document.getElementById('total-price');
+
+    const preview = document.getElementById('order-preview');
+
+    function calcTotal(count) {
+      if (count === 100) return PRICES['100'];
+      if (count >= 200) return Math.round(count * PRICES['200+']);
+      if (count >= 151) return Math.round(count * PRICES['151-199']);
+      if (count >= 101) return Math.round(count * PRICES['101-150']);
+      if (count >= 51)  return Math.round(count * PRICES['51-99']);
+      return Math.round(count * PRICES['20-50']);
+    }
+
+    function selectedDelivery() {
+      return document.querySelector('input[name="delivery"]:checked')?.value || "";
+    }
+
+    function updateDeliveryFieldsUI() {
+      const d = selectedDelivery();
+      document.getElementById('ukrposhta-fields').classList.toggle('active', d === 'ukrposhta');
+      document.getElementById('novaposhta-fields').classList.toggle('active', d === 'novaposhta');
+    }
+
+    function validateMinimal() {
+      const files = photos.files;
+      if (!files || files.length === 0) return "Додайте фото для друку";
+      if (files.length < MIN_QTY) return `Мінімальне замовлення — ${MIN_QTY} фото`;
+      const s = document.getElementById('surname').value.trim();
+      const n = document.getElementById('name').value.trim();
+      const p = document.getElementById('patronymic').value.trim();
+      const ph = document.getElementById('phone').value.trim();
+      if (!s || !n || !p || !ph) return "Заповніть ПІБ та телефон";
+      const d = selectedDelivery();
+      if (!d) return "Оберіть спосіб доставки";
+
+      if (d === 'ukrposhta') {
+        const idx = document.getElementById('postal-index').value.trim();
+        if (!idx) return "Вкажіть поштовий індекс для Укрпошти";
+      } else if (d === 'novaposhta') {
+        const region = document.getElementById('region').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const branch = document.getElementById('branch').value.trim();
+        if (!region || !city || !branch) return "Заповніть область/місто/відділення для Нової Пошти";
+      }
+      return "";
+    }
+
+    function buildPreviewText() {
+      const err = validateMinimal();
+      if (err) return "";
+
+      const count = photos.files.length;
+      const total = calcTotal(count);
+
+      const fullName = [
+        document.getElementById('surname').value,
+        document.getElementById('name').value,
+        document.getElementById('patronymic').value
+      ].map(v => v.trim()).join(' ').trim();
+
+      const phone = document.getElementById('phone').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      const deliveryText = OrderShare.buildDeliveryText({
+        delivery: selectedDelivery(),
+        postalIndex: document.getElementById('postal-index').value,
+        ukrAddress: document.getElementById('ukrposhta-address').value,
+        region: document.getElementById('region').value,
+        city: document.getElementById('city').value,
+        branch: document.getElementById('branch').value
+      });
+
+      return OrderShare.buildOrderText({
+        type: "Друк фото 10×15",
+        photoCount: count,
+        totalPrice: total,
+        fullName,
+        phone,
+        deliveryText,
+        notes
+      });
+    }
+
+    function refreshPreviewAndPrice() {
+      fileError.textContent = "";
+
+      const files = photos.files;
+      if (files && files.length > 0) {
+        fileInfo.textContent = `Вибрано файлів: ${files.length}`;
+        if (files.length < MIN_QTY) {
+          fileError.textContent = `Мінімальне замовлення — ${MIN_QTY} фото`;
+          priceSummary.style.display = "none";
+        } else {
+          const total = calcTotal(files.length);
+          totalPriceEl.textContent = total;
+          priceSummary.style.display = "block";
+        }
+      } else {
+        fileInfo.textContent = "Файлів не вибрано";
+        priceSummary.style.display = "none";
+      }
+
+      updateDeliveryFieldsUI();
+      const text = buildPreviewText();
+      preview.value = text || "Заповніть форму — тут зʼявиться текст замовлення";
+    }
+
+    photos.addEventListener('change', refreshPreviewAndPrice);
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input', refreshPreviewAndPrice);
+      el.addEventListener('change', refreshPreviewAndPrice);
+    });
+    document.querySelectorAll('input[name="delivery"]').forEach(el => el.addEventListener('change', refreshPreviewAndPrice));
+
+    document.getElementById('send-telegram').addEventListener('click', () => {
+      const err = validateMinimal();
+      if (err) { alert(err); return; }
+      const text = buildPreviewText();
+      OrderShare.openTelegram(text);
+    });
+
+    document.getElementById('send-viber').addEventListener('click', () => {
+      const err = validateMinimal();
+      if (err) { alert(err); return; }
+      const text = buildPreviewText();
+      OrderShare.copyToClipboard(text);
+      OrderShare.openViberBusiness();
+    });
+
+    document.getElementById('copy-text').addEventListener('click', () => {
+      const err = validateMinimal();
+      if (err) { alert(err); return; }
+      const text = buildPreviewText();
+      OrderShare.copyToClipboard(text);
+    });
+
+    refreshPreviewAndPrice();
+  </script>
+</body>
+</html>
